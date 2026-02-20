@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking - Monkey D. Airlines</title>
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            text-align: center;
+        }
+
+        h1 {
+            background: #0b3d91;
+            padding: 20px;
+            margin: 0;
+        }
+
+        nav {
+            background: #082c6c;
+            padding: 10px;
+        }
+
+        nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+        }
+
+        .section-title {
+            margin-top: 40px;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .first-label { color: gold; }
+        .business-label { color: deepskyblue; }
+        .economy-label { color: lightgreen; }
+
+        .seat-map {
+            margin: 10px auto 30px auto;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 8px;
+        }
+
+        .seat {
+            width: 80px;
+            height: 50px;
+            margin: 5px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .first { background: gold; color: black; }
+        .business { background: royalblue; }
+        .economy { background: seagreen; }
+
+        .booked {
+            background: red !important;
+            cursor: not-allowed;
+        }
+
+        .aisle {
+            width: 40px;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 250px;
+            border-radius: 6px;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Monkey D. Airlines – Seat Booking</h1>
+
+<nav>
+    <a href="index.html">Booking</a>
+    <a href="manifest.html">Manifest</a>
+    <a href="admin.html">Admin</a>
+</nav>
+
+<div style="margin:20px;">
+    <input id="usernameInput" placeholder="Enter your username">
+</div>
+
+<div id="seatMap"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyA0OcUMw7t0z9a177JguzM9vd3afksfqQ4",
+    authDomain: "monkeydairlines.firebaseapp.com",
+    databaseURL: "https://monkeydairlines-default-rtdb.firebaseio.com",
+    projectId: "monkeydairlines",
+    storageBucket: "monkeydairlines.firebasestorage.app",
+    messagingSenderId: "128366979035",
+    appId: "1:128366979035:web:1747707040c1b11a14e9fe"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const seatMap = document.getElementById("seatMap");
+
+/* LISTEN FOR LIVE UPDATES */
+function listenToSeat(seatId, button) {
+    const seatRef = doc(db, "seats", seatId);
+
+    onSnapshot(seatRef, (docSnap) => {
+        if (docSnap.exists()) {
+            button.classList.add("booked");
+            button.textContent = docSnap.data().username;
+        }
+    });
+}
+
+/* BOOK SEAT */
+async function bookSeat(seatId, button) {
+
+    const name = document.getElementById("usernameInput").value.trim();
+
+    if (!name) {
+        alert("Please enter a username first!");
+        return;
+    }
+
+    const seatRef = doc(db, "seats", seatId);
+    const seatSnap = await getDoc(seatRef);
+
+    if (seatSnap.exists()) {
+        alert("Seat already booked!");
+        return;
+    }
+
+    await setDoc(seatRef, { username: name });
+}
+
+/* CREATE SECTION */
+function createSection(title, labelClass, rows, className, startRow) {
+
+    const sectionTitle = document.createElement("div");
+    sectionTitle.className = "section-title " + labelClass;
+    sectionTitle.textContent = title;
+    seatMap.appendChild(sectionTitle);
+
+    const sectionContainer = document.createElement("div");
+    sectionContainer.className = "seat-map";
+
+    for (let i = 0; i < rows; i++) {
+
+        const rowDiv = document.createElement("div");
+        rowDiv.className = "row";
+
+        const rowNumber = startRow + i;
+
+        const leftSeatId = rowNumber + "A";
+        const rightSeatId = rowNumber + "B";
+
+        const leftSeat = document.createElement("button");
+        leftSeat.className = "seat " + className;
+        leftSeat.textContent = leftSeatId;
+
+        const rightSeat = document.createElement("button");
+        rightSeat.className = "seat " + className;
+        rightSeat.textContent = rightSeatId;
+
+        leftSeat.onclick = () => bookSeat(leftSeatId, leftSeat);
+        rightSeat.onclick = () => bookSeat(rightSeatId, rightSeat);
+
+        listenToSeat(leftSeatId, leftSeat);
+        listenToSeat(rightSeatId, rightSeat);
+
+        const aisle = document.createElement("div");
+        aisle.className = "aisle";
+
+        rowDiv.appendChild(leftSeat);
+        rowDiv.appendChild(aisle);
+        rowDiv.appendChild(rightSeat);
+
+        sectionContainer.appendChild(rowDiv);
+    }
+
+    seatMap.appendChild(sectionContainer);
+}
+
+/* AIRCRAFT LAYOUT */
+
+createSection("FIRST CLASS", "first-label", 4, "first", 1);
+createSection("BUSINESS CLASS", "business-label", 8, "business", 5);
+createSection("ECONOMY CLASS", "economy-label", 3, "economy", 13);
+
+</script>
+
+</body>
+</html>
