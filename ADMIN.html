@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login - Monkey D. Airlines</title>
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 100px;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 15px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .error {
+            color: red;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Admin Access</h1>
+
+<p>Enter Admin Password:</p>
+
+<input type="password" id="password" placeholder="Password">
+<br>
+<button onclick="checkPassword()">Login</button>
+
+<div id="message" class="error"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+const firebaseConfig = {
+    apiKey: "AIzaSyA0OcUMw7t0z9a177JguzM9vd3afksfqQ4",
+    authDomain: "monkeydairlines.firebaseapp.com",
+    databaseURL: "https://monkeydairlines-default-rtdb.firebaseio.com",
+    projectId: "monkeydairlines",
+    storageBucket: "monkeydairlines.firebasestorage.app",
+    messagingSenderId: "128366979035",
+    appId: "1:128366979035:web:1747707040c1b11a14e9fe"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const correctPassword = "R1P_D0rthy6";
+
+window.checkPassword = async function() {
+    const entered = document.getElementById("password").value;
+
+    if (entered !== correctPassword) {
+        document.getElementById("message").textContent = "Incorrect password.";
+        return;
+    }
+
+    const seatsCollection = collection(db, "seats");
+    const snapshot = await getDocs(seatsCollection);
+
+    for (const seatDoc of snapshot.docs) {
+        await deleteDoc(doc(db, "seats", seatDoc.id));
+    }
+
+    alert("Seats successfully reset.");
+    window.location.href = "index.html";
+};
+</script>
+
+</body>
+</html>
